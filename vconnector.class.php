@@ -12,7 +12,7 @@
 class vconnector{
 
 	/*Conexión a la base de datos*/
-	private conexion;
+	private $conexion;
 	
 	/**
 	* conecta a la base de datos, recibe como parámetros obligatorios
@@ -199,7 +199,7 @@ class vconnector{
 	 *DEBUGER DE SQLS 
 	 *
 	 */
-	$public function debuger($SQL,$ANSWER){
+	public function debuger($SQL,$ANSWER){
 		echo "SQL-> ".$SQL;
 		echo "RETORNO: "; print_r($ANSWER);
 	}
