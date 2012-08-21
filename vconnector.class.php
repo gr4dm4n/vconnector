@@ -42,6 +42,7 @@ class vconnector{
 			}
 			else{
 				mysql_query("SET NAMES '$dbcharset'",$this->conexion);
+				//echo "\n<br/>se conecto a la base de datos\n<br/>";
 			}
 		}	
 	}
@@ -67,7 +68,7 @@ class vconnector{
 	 */
 	public function insert($table_name,$cols,$vals){
 		$SQL_INSERT = "INSERT INTO $table_name ($cols) VALUES ($vals)";
-		$answer = mysql_query($SQL_INSERT1,$this->conexion);
+		$answer = mysql_query($SQL_INSERT,$this->conexion);
 		if(!$answer){
 			 die('INSERT no válida: ' . mysql_error());
 		}
@@ -88,7 +89,7 @@ class vconnector{
 	 * @param bool $debug
 	 *
 	 * @return array
-	 * @see debuger() para ver como se retorna el debug del select
+	 * @see debuger() para ver como se retorna el debug del SQL
 	 */
     public function select($SQL,$debug = false){
 		$array_return = array();
@@ -121,6 +122,8 @@ class vconnector{
 	 *
 	 * SQL Generado: UPDATE user SET name = 'carlos', age = '30' WHERE 1=1 AND ID = 1;
 	 *
+	 * @see debuger() para ver como se retorna el debug del SQL
+	 * 
 	 * @param string $table
 	 * @param string $cols
 	 * @param string $vals
@@ -128,12 +131,17 @@ class vconnector{
 	 *
 	 * @return true;
 	 */
-	public function update($table, $cols, $vals, $clauses = ''){
+	public function update($table, $cols, $vals, $clauses = '', $debug = false){
 		$AND = '1=1 ';
 		$columns = explode(',', $cols);
 		$values = explode(',', $vals);
-		$clauses = explode(',', $clauses);
-
+		if($clauses == ''){
+			$clauses = array();
+		}
+		else{
+			$clauses = explode(',', $clauses);
+		}
+		
 		if((count($columns)) != (count($values))){
 			return false;
 		}
@@ -144,14 +152,23 @@ class vconnector{
 				$sets .="$column = '".$values[$i]."', ";
 				++$i;
 			}
-			foreach ($clauses as $clause) {
-				$AND .="AND $clause ";
+		
+			if(count($clauses)>0){
+				foreach ($clauses as $clause) {
+					$AND .="AND $clause ";
+				}	
 			}
+			
 
 			$sets = substr($sets , 0, -2); //quita la ',' y el espacio final
 			$AND = substr($AND , 0, -1); //quita el espacio final
 			
 			$SQL_UPDATE = "UPDATE $table SET $sets WHERE $AND";
+		
+			if($debug){
+				$this->debuger($SQL_UPDATE,array());
+			}
+			
 			$answer = mysql_query($SQL_UPDATE,$this->conexion);
 			if(!$answer){
 				 die('actualización no válida: ' . mysql_error());
@@ -174,18 +191,34 @@ class vconnector{
 	 *
 	 * SQL GENERADO: DELETE FROM user WHERE 1=1 AND ID = 1
 	 *
+	 * @see debuger() para ver como se retorna el debug del SQL
+	 * 
 	 * @param string $table
 	 * @param string $clauses
 	 *
 	 * @return true;
 	 */
-	public function delete($table, $clauses = ''){
+	public function delete($table, $clauses = '', $debug = false){
 		$AND = '1=1 ';
-		$clauses = explode(',', $clauses);
-		foreach ($clauses as $clause) {
+		if($clauses == ''){
+			$clauses = array();
+		}
+		else{
+			$clauses = explode(',', $clauses);
+		}
+		
+		if(count($clauses)>0){
+			foreach ($clauses as $clause){
 				$AND .="AND $clause ";
+			}	
 		}
 		$SQL_DELETE = "DELETE FROM $table WHERE $AND";
+		
+		//debug del sql
+		if($debug){
+			$this->debuger($SQL_DELETE,array());
+		}
+		
 		$answer = mysql_query($SQL_DELETE,$this->conexion);
 		if(!$answer){
 			 die('delete no válido: ' . mysql_error());
@@ -196,14 +229,39 @@ class vconnector{
 	}
 	
 	/**
+	 * Ejecuta un query especial en la bse de datos 
+	 * que no se pueda realizar con las funciones anteriores
+	 * 
+	 * @param string $SQL
+	 * @param bool $debug
+	 *
+	 * @return sql_response
+	 * @see debuger() para ver como se retorna el debug del SQL
+	 * 
+	 * */
+	public function execute($SQL,$debug = false){
+		if($debug){
+			$this->debuger($SQL,array());
+		}
+		
+		$answer = mysql_query($SQL,$this->conexion);
+		if(!$answer){
+			 die('delete no válido: ' . mysql_error());
+		}
+		else{
+			return $answer;
+		}
+		
+	}
+
+	/**
 	 *DEBUGER DE SQLS 
 	 *
 	 */
 	public function debuger($SQL,$ANSWER){
-		echo "SQL-> ".$SQL;
-		echo "RETORNO: "; print_r($ANSWER);
+		echo "\n<br/>SQL-> ".$SQL;
+		echo "\n<br/>RETORNO: "; print_r($ANSWER);
 	}
-	
 	
 	
 	/**
@@ -211,7 +269,7 @@ class vconnector{
 	 */
 	public function __destruct(){
 		mysql_close($this->conexion);
-		
+		//echo "\n<br/>se desconecto de la base de datos\n<br/>";
 		//mysql_free_result($res_tyco);
 	}
 	
