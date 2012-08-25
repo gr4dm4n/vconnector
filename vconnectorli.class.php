@@ -253,7 +253,7 @@ class vconnector{
 		$stmt = mysqli_prepare($this->conexion, $SQL);
 		$answer = mysqli_stmt_execute($stmt);
 		if(!$answer){
-			 die('delete no válido: ' .  mysqli_stmt_error($stmt));
+			 die('ejecucion no válido: ' .  mysqli_stmt_error($stmt));
 		}
 		else{
 			mysqli_stmt_close($stmt);
