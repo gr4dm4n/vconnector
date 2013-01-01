@@ -135,7 +135,7 @@ class vconnector{
 	public function update($table, $cols, $vals, $clauses = '', $debug = false){
 		$AND = '1=1 ';
 		$columns = explode(',', $cols);
-		$values = explode(',', $vals);
+		$values = explode('/,', $vals);
 		if($clauses == ''){
 			$clauses = array();
 		}
@@ -273,6 +273,42 @@ class vconnector{
 	
 	
 	/**
+	 * Connection alerts Function can help to struct outputs
+	 * @param string $info_to_debug
+	 * @param int $error_code
+	 * @param string $status
+	 * @param bool $print_json
+	 * @param bool $print_on_screen
+	 * @return array|bool|string
+	 */
+	public function print_debug( $info_to_debug, $status = 'SUCCESS', $error_code = 0, $print_json = true, $print_on_screen = true ){
+		$array_output = array(
+				'error_code' => $error_code,
+				'Status' => $status,
+				'Debug_info' => $info_to_debug
+		);
+	
+		if($print_on_screen){
+			if($print_json){
+				echo json_encode($array_output);
+			}
+			else{
+				print_r($array_output);
+			}
+			return true;
+		}
+		else{
+			if($print_json){
+				return json_encode($array_output);
+			}
+			else{
+				return $array_output;
+			}
+				
+		}
+	}
+	
+	/**
 	 * destruye la conexión
 	 */
 	public function __destruct(){
@@ -282,4 +318,3 @@ class vconnector{
 	
 
 }
-?>
