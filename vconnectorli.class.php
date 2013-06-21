@@ -8,7 +8,8 @@
  */
 
 
-class vconnector{
+class vconnector
+{
 
 	/*Conexión a la base de datos*/
 	private $conexion;
@@ -27,14 +28,15 @@ class vconnector{
 	* al dejar de usar la clase automáticamente cierra la conexión
 	* @see __destruct()
 	*/
-	public function __construct($dbuser, $dbpassword, $dbname, $dbhost, $dbcharset = 'utf8'){
+	public function __construct($dbuser, $dbpassword, $dbname, $dbhost, $dbcharset = 'utf8')
+	{
 		
 		$this->conexion = mysqli_connect($dbhost, $dbuser, $dbpassword, $dbname);
 	
-		if (!$this->conexion) {
+		if (!$this->conexion) 
 			 die('Connect Error (' . mysqli_connect_errno() . ') ' . mysqli_connect_error());
-		}
-		else{
+		else
+		{
 				$stmt = mysqli_prepare($this->conexion, "SET NAMES '$dbcharset'");
 				mysqli_stmt_execute($stmt);
 				//echo "\n<br/>se conecto a la base de datos\n<br/>";
@@ -60,8 +62,14 @@ class vconnector{
 	 *
 	 * @return true;
 	 */
-	public function insert($table_name,$cols,$vals){
+	protected function insert($table_name,$cols,$vals,$debug = false)
+	{
 		$SQL_INSERT = "INSERT INTO $table_name ($cols) VALUES ($vals)";
+		
+		if($debug)
+			$this->debuger($SQL_INSERT,array());
+		
+		
 		$stmt = mysqli_prepare($this->conexion, $SQL_INSERT);
 		/* Execute the statement */
 		$answer = mysqli_stmt_execute($stmt);
@@ -73,9 +81,6 @@ class vconnector{
 			mysqli_stmt_close($stmt);
 			return true;
 		}
-		
-		
-		
 	}
 	
 	/**
@@ -91,23 +96,29 @@ class vconnector{
 	 * @return array
 	 * @see debuger() para ver como se retorna el debug del SQL
 	 */
-    public function select($SQL,$debug = false){
-		$array_return = array();
-		
-		if ($result = mysqli_query($this->conexion, $SQL)) {
-		    while ($row = mysqli_fetch_row($result)) {
-		        $array_return[] = $row;
-		    }
-		    /* free result set */
-		    mysqli_free_result($result);
-		}
-		
-		/*debug para revisar si el sql que se pasa es el correcto y las respuestas del array*/
-		if($debug){
-			$this->debuger($SQL,$array_return);
-		}
-		
-		return $array_return;
+    protected function select($SQL,$debug = false)
+    {
+    	$array_return = array();
+    	
+    	if( strlen( $SQL ) > 0 )
+    	{
+    		if ($result = mysqli_query($this->conexion, $SQL)) 
+    		{
+    			while ($row = mysqli_fetch_row($result)) 
+    			{
+    				$array_return[] = $row;
+    			}
+    			/* free result set */
+    			mysqli_free_result($result);
+    		}
+    		
+    		/*debug para revisar si el sql que se pasa es el correcto y las respuestas del array*/
+    		if($debug){
+    			$this->debuger($SQL,$array_return);
+    		}
+    	}
+    	
+    	return $array_return;
 	}
 
 
@@ -132,10 +143,11 @@ class vconnector{
 	 *
 	 * @return true;
 	 */
-	public function update($table, $cols, $vals, $clauses = '', $debug = false){
+	protected function update($table, $cols, $vals, $clauses = '', $debug = false)
+	{	
 		$AND = '1=1 ';
 		$columns = explode(',', $cols);
-		$values = explode('/,', $vals);
+		$values = explode(',', $vals);
 		if($clauses == ''){
 			$clauses = array();
 		}
@@ -143,14 +155,17 @@ class vconnector{
 			$clauses = explode(',', $clauses);
 		}
 		
-		if((count($columns)) != (count($values))){
+		if((count($columns)) != (count($values)))
+		{
+			if($debug)
+				$this->debuger("No son iguales las columnas a los valores",array());
 			return false;
 		}
 		else{
 			$sets = '';
 			$i=0;
 			foreach ($columns as $column) {
-				$sets .="$column = '".$values[$i]."', ";
+				$sets .="$column = ".$values[$i].", ";
 				++$i;
 			}
 		
@@ -202,7 +217,7 @@ class vconnector{
 	 *
 	 * @return true;
 	 */
-	public function delete($table, $clauses = '', $debug = false){
+	protected function delete($table, $clauses = '', $debug = false){
 		$AND = '1=1 ';
 		if($clauses == ''){
 			$clauses = array();
@@ -245,7 +260,7 @@ class vconnector{
 	 * @see debuger() para ver como se retorna el debug del SQL
 	 * 
 	 * */
-	public function execute($SQL,$debug = false){
+	protected function execute($SQL,$debug = false){
 		if($debug){
 			$this->debuger($SQL,array());
 		}
@@ -257,20 +272,135 @@ class vconnector{
 		}
 		else{
 			mysqli_stmt_close($stmt);
+			
+			if($debug){
+				$this->debuger($SQL,array("$answer"));
+			}
+			
 			return $answer;
 		}
 		
 	}
-
+	
+	
+	/* HELPERS FUNCTIONS */
+	
 	/**
-	 *DEBUGER DE SQLS 
-	 *
+	 * 
+	 * Compara dos fechas retorna true si la fecha limite es mayor a la de hoy
+	 * falso si lo contrario
+	 * 
+	 * @return bool
 	 */
-	public function debuger($SQL,$ANSWER){
-		echo "\n<br/>SQL-> ".$SQL;
-		echo "\n<br/>RETORNO: "; print_r($ANSWER);
+	public function DateComapre($expirationDate, $debug = false)
+	{
+		$today = date("Y-m-d H:i:s");
+		
+		if($debug)
+		{
+			echo "Expiraton date: ".$expirationDate;
+			echo "<br /> today: ".$today;
+		}
+		
+		$today = strtotime($today);
+		$expirationDate = strtotime($expirationDate);
+		
+		if($debug)
+		{
+			echo "<br /> expiration date UNIX: ".$expirationDate;
+			echo "<br /> today Unix: ".$today;
+		}
+		
+		if ($expirationDate > $today) {
+			return true;
+		} else {
+			return false;
+		}
 	}
 	
+	
+	/**
+	 *
+	 * Compara si la fecha actual con una fecha registro ya pasó una semana
+	 * falso si lo contrario
+	 *
+	 * @return bool
+	 */
+	public function ElapsedDate($registerDate, $_daysAfter = 7, $debug = false)
+	{
+		$today = date("Y-m-d H:i:s");
+	
+		if($debug)
+		{
+			echo "register date: ".$registerDate;
+			echo "<br /> today: ".$today;
+		}
+	
+		$today = strtotime($today);
+		$registerDate = strtotime($registerDate);
+	
+		if($debug)
+		{
+			echo "<br /> register date UNIX: ".$registerDate;
+			echo "<br /> today Unix: ".$today;
+		}
+	
+		$dateDifference  = ($today - $registerDate) / 86400;
+		
+		if($debug)
+		{
+			echo "<br /> difference: ".$dateDifference;
+			echo "<br /> days after: ".$_daysAfter;
+		}
+		
+		if ($dateDifference > $_daysAfter) 
+			return true;
+		else 
+			return false;
+	}
+
+	
+	/**
+	 * 
+	 * genera numero aleatorios diferentes, tantos como se indiquen
+	 * 
+	 * @param int $maximunNumberGenerated
+	 * @return array
+	 */
+	public function GenerateRandomNumbers( $maxNumberGenerated, $minValue = 1, $maxValue = 20 )
+	{
+		//inicializo variables 
+		$randomNumbers = array();
+		$iterator = 0;
+		
+		//restrigen la cantidad de numeros generados al maximo posibles
+		$maxNumberCanBeGenerated = ($maxValue - $minValue) + 1;
+		if( $maxNumberGenerated > $maxNumberCanBeGenerated )
+			$maxNumberGenerated = $maxNumberCanBeGenerated;
+		
+		//si minVaule es mayor a maxValue invierte los valores de maximo y minimo
+		if($minValue > $maxValue)
+		{
+			$tempVal = $minValue;
+			$minValue = $maxValue;
+			$maxValue = $tempVal;
+			unset($tempVal);
+		}
+		
+		do 
+		{
+			$randonNumber = rand($minValue,$maxValue);
+			if( !in_array($randonNumber, $randomNumbers) )
+			{
+				$randomNumbers[$iterator] = $randonNumber;
+				++$iterator;
+			}
+				
+		}
+		while( $iterator != $maxNumberGenerated);
+		
+		return $randomNumbers;
+	}
 	
 	/**
 	 * Connection alerts Function can help to struct outputs
@@ -281,7 +411,8 @@ class vconnector{
 	 * @param bool $print_on_screen
 	 * @return array|bool|string
 	 */
-	public function print_debug( $info_to_debug, $status = 'SUCCESS', $error_code = 0, $print_json = true, $print_on_screen = true ){
+	protected function print_debug( $info_to_debug, $status = 'SUCCESS', $error_code = 0, $print_json = true, $print_on_screen = true )
+	{
 		$array_output = array(
 				'error_code' => $error_code,
 				'Status' => $status,
@@ -308,10 +439,20 @@ class vconnector{
 		}
 	}
 	
+
+	/**
+	 *DEBUGER DE SQLS
+	 *
+	 */
+	private function debuger($SQL,$ANSWER){
+		echo "\n<br/>SQL-> ".$SQL;
+		echo "\n<br/>RETORNO: "; print_r($ANSWER);
+	}
+	
 	/**
 	 * destruye la conexión
 	 */
-	public function __destruct(){
+	function __destruct(){
 		mysqli_close($this->conexion);
 		//echo "\n<br/>se desconecto de la base de datos\n<br/>";
 	}
