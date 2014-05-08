@@ -453,6 +453,7 @@ class vconnector
 	 * destruye la conexión
 	 */
 	function __destruct(){
+		if($this->conexion)
 		mysqli_close($this->conexion);
 		//echo "\n<br/>se desconecto de la base de datos\n<br/>";
 	}
