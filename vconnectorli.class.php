@@ -401,6 +401,12 @@ class vconnector
 		
 		return $randomNumbers;
 	}
+
+	public function CheckProbability($probability , $length)
+	{
+	   $rand = mt_rand(1, $length);
+	   return $rand<=$probability*$length;
+	}
 	
 	/**
 	 * Connection alerts Function can help to struct outputs
