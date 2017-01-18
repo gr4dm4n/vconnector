@@ -10,7 +10,8 @@
 
 class vconnector
 {
-
+	static private $instance = NULL;
+	
 	/*Conexión a la base de datos*/
 	private $conexion;
 	
@@ -455,6 +456,13 @@ class vconnector
 		echo "\n<br/>RETORNO: "; print_r($ANSWER);
 	}
 	
+	 static public function getInstance($dbuser, $dbpassword, $dbname, $dbhost, $dbcharset = 'utf8') {
+	    if (self::$instance == NULL) {
+	      self::$instance = new vconnector($dbuser,$dbpassword,$dbname,$dbhost, $dbcharset);
+	    }
+	    return self::$instance;
+	  }
+
 	/**
 	 * destruye la conexión
 	 */
